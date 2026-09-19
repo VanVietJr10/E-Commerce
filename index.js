@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const authRoutes = require("./src/routes/authRoutes");
 const errorHandler = require("./src/middlewares/error");
 const categoryRoutes = require("./src/routes/categoryRoutes");
@@ -8,6 +9,7 @@ const cartRoutes = require("./src/routes/cartRoutes");
 const orderRoutes = require("./src/routes/orderRoutes");
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);

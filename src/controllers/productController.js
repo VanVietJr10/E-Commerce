@@ -36,7 +36,7 @@ exports.getProducts = async (req, res, next) => {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const { name, price, stock, imageUrl, categoryId } = req.body;
+    const { name, price, description, stock, imageUrl, categoryId } = req.body;
     if (!name || !price) {
       res.status(400).json({
         success: false,
@@ -47,6 +47,7 @@ exports.createProduct = async (req, res, next) => {
       data: {
         name,
         price: Number(price),
+        description,
         stock: Number(stock),
         imageUrl,
         categoryId: categoryId ? Number(categoryId) : null,

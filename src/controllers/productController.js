@@ -1,4 +1,3 @@
-const { success } = require("zod");
 const prisma = require("../config/db");
 
 exports.getProducts = async (req, res, next) => {
@@ -19,6 +18,7 @@ exports.getProducts = async (req, res, next) => {
       }),
       prisma.product.count({ where }),
     ]);
+
     res.json({
       success: true,
       pagination: {
@@ -34,28 +34,33 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
+// 2. Tạo sản phẩm mới
 exports.createProduct = async (req, res, next) => {
   try {
     const { name, price, description, stock, imageUrl, categoryId } = req.body;
+
+    // 🟢 CÓ RETURN Ở ĐÂY ĐỂ CHẶN KHÔNG BỊ CHẠY TIẾP
     if (!name || !price) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
-        message: "Ten san pham va gia khong duoc de trong",
+        message: "Tên sản phẩm và giá không được để trống",
       });
     }
+
     const product = await prisma.product.create({
       data: {
         name,
         price: Number(price),
         description,
-        stock: Number(stock),
+        stock: Number(stock) || 0,
         imageUrl,
         categoryId: categoryId ? Number(categoryId) : null,
       },
     });
+
     res.status(201).json({
       success: true,
-      message: "Tao thanh cong san pham",
+      message: "Tạo thành công sản phẩm",
       data: product,
     });
   } catch (e) {
@@ -63,10 +68,11 @@ exports.createProduct = async (req, res, next) => {
   }
 };
 
-exports.updateProduct = async (req, res) => {
+// 3. Cập nhật sản phẩm (PUT /api/products/:id)
+exports.updateProduct = async (req, res, next) => {
   try {
     const productId = Number(req.params.id);
-    const { name, price, stock, imageUrl, description } = req.body;
+    const { name, price, stock, imageUrl, description, categoryId } = req.body;
 
     // Kiểm tra sản phẩm có tồn tại không
     const existingProduct = await prisma.product.findUnique({
@@ -87,23 +93,30 @@ exports.updateProduct = async (req, res) => {
         imageUrl: imageUrl !== undefined ? imageUrl : existingProduct.imageUrl,
         description:
           description !== undefined ? description : existingProduct.description,
+        categoryId:
+          categoryId !== undefined
+            ? categoryId
+              ? Number(categoryId)
+              : null
+            : existingProduct.categoryId,
       },
     });
 
-    res.status(200).json(updatedProduct);
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật sản phẩm thành công!",
+      data: updatedProduct,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Lỗi cập nhật sản phẩm: " + error.message });
+    next(error);
   }
 };
 
-// 🟢 4. MỚI: Xóa sản phẩm (DELETE /api/products/:id)
-exports.deleteProduct = async (req, res) => {
+// 4. Xóa sản phẩm (DELETE /api/products/:id)
+exports.deleteProduct = async (req, res, next) => {
   try {
     const productId = Number(req.params.id);
 
-    // Kiểm tra sản phẩm có tồn tại không
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -114,13 +127,14 @@ exports.deleteProduct = async (req, res) => {
         .json({ message: "Không tìm thấy sản phẩm để xóa!" });
     }
 
-    // Xóa sản phẩm khỏi CSDL
     await prisma.product.delete({
       where: { id: productId },
     });
 
-    res.status(200).json({ message: "Xóa sản phẩm thành công!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Xóa sản phẩm thành công!" });
   } catch (error) {
-    res.status(500).json({ message: "Lỗi xóa sản phẩm: " + error.message });
+    next(error);
   }
 };

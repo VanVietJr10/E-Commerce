@@ -62,3 +62,65 @@ exports.createProduct = async (req, res, next) => {
     next(e);
   }
 };
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const productId = Number(req.params.id);
+    const { name, price, stock, imageUrl, description } = req.body;
+
+    // Kiểm tra sản phẩm có tồn tại không
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm!" });
+    }
+
+    // Tiến hành cập nhật
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        name: name !== undefined ? name : existingProduct.name,
+        price: price !== undefined ? Number(price) : existingProduct.price,
+        stock: stock !== undefined ? Number(stock) : existingProduct.stock,
+        imageUrl: imageUrl !== undefined ? imageUrl : existingProduct.imageUrl,
+        description:
+          description !== undefined ? description : existingProduct.description,
+      },
+    });
+
+    res.status(200).json(updatedProduct);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi cập nhật sản phẩm: " + error.message });
+  }
+};
+
+// 🟢 4. MỚI: Xóa sản phẩm (DELETE /api/products/:id)
+exports.deleteProduct = async (req, res) => {
+  try {
+    const productId = Number(req.params.id);
+
+    // Kiểm tra sản phẩm có tồn tại không
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!existingProduct) {
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy sản phẩm để xóa!" });
+    }
+
+    // Xóa sản phẩm khỏi CSDL
+    await prisma.product.delete({
+      where: { id: productId },
+    });
+
+    res.status(200).json({ message: "Xóa sản phẩm thành công!" });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi xóa sản phẩm: " + error.message });
+  }
+};

@@ -12,4 +12,18 @@ router.post(
   productController.createProduct,
 );
 
+router.put(
+  "/:id",
+  authenticate,
+  authorize("ADMIM"),
+  productController.updateProduct,
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize("ADMIN"),
+  productController.deleteProduct,
+);
+
 module.exports = router;

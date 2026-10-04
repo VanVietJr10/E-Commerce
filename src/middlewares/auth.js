@@ -6,7 +6,7 @@ const authenticate = (req, res, next) => {
     if (!authHeader || !authHeader.startsWith("Bearer")) {
       return res
         .status(401)
-        .json({ message: "Ban chua dang nhap hoac thieu token" });
+        .json({ message: "Chưa đăng nhập hoặc thiếu Token!" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -14,9 +14,10 @@ const authenticate = (req, res, next) => {
     req.user = decode;
     next();
   } catch (e) {
+    console.error("Lỗi xác thực Token:", error.message);
     return res
-      .status(401)
-      .json({ message: "Token khong hop le hoac da het han" });
+      .status(403)
+      .json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
   }
 };
 

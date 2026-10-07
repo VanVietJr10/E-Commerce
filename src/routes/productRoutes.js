@@ -15,7 +15,7 @@ router.post(
 router.put(
   "/:id",
   authenticate,
-  authorize("ADMIM"),
+  authorize("ADMIN"),
   productController.updateProduct,
 );
 

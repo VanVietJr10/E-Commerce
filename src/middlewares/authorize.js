@@ -1,19 +1,21 @@
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
+    console.log("=== DEBUG AUTHORIZE ===");
+    console.log("Req User từ Token:", req.user);
+    console.log("Allowed Roles:", allowedRoles);
+
     if (!req.user || !req.user.role) {
-      console.log(
-        "❌ Authorize Fail: Không tìm thấy req.user hoặc req.user.role",
-      );
-      return res.status(403).json({ message: "Không có thông tin quyền hạn!" });
+      return res
+        .status(403)
+        .json({ message: "Không tìm thấy role trong token!" });
     }
 
-    // Chuyển tất cả về chữ HOA để so sánh không bị sai lệch (ví dụ: "admin" -> "ADMIN")
     const userRole = String(req.user.role).trim().toUpperCase();
     const roles = allowedRoles.map((r) => String(r).trim().toUpperCase());
 
     if (!roles.includes(userRole)) {
       return res.status(403).json({
-        message: "Bạn không có quyền thực hiện thao tác này!",
+        message: `Quyền '${userRole}' không có quyền truy cập! Cần quyền: ${roles.join(", ")}`,
       });
     }
 

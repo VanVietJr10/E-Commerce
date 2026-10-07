@@ -1,4 +1,5 @@
 const prisma = require("../config/db");
+const { search } = require("../routes/productRoutes");
 
 exports.getProducts = async (req, res, next) => {
   try {
@@ -7,7 +8,18 @@ exports.getProducts = async (req, res, next) => {
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    const where = categoryId ? { categoryId: Number(categoryId) } : {};
+    const where = {};
+
+    if (categoryId) {
+      where.categoryId = Number(categoryId);
+    }
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
 
     const [product, total] = await Promise.all([
       prisma.product.findMany({
@@ -15,6 +27,7 @@ exports.getProducts = async (req, res, next) => {
         skip,
         take: limitNum,
         include: { category: true },
+        orderBy: { id: "desc" },
       }),
       prisma.product.count({ where }),
     ]);
